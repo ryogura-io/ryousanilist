@@ -85,7 +85,8 @@ export default function Home() {
         <DotPattern glow={true} className={cn("[mask-image:radial-gradient(2000px_circle_at_center,transparent,white)]")}
         />
         <h1 className="display-1 fw-bold mb-3"><AuroraText>Gura-io</AuroraText></h1>
-        <p className="lead mb-4">Multi session WhatsApp bot built for Enterprise-grade performance.</p>
+        <p className="lead mb-4"><strong>Welcome to My Anime List!</strong><br/>
+Here you’ll find a collection of anime I’ve explored, sorted by genre and type. Use the filters to discover shows that match your vibe — whether it’s action-packed adventures, heartfelt dramas, or lighthearted comedies.</p>
         <a href="#username" className="btn btn-danger btn-lg rounded-0">Get Started</a>
       </section>
 
