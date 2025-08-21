@@ -90,36 +90,7 @@ Here you’ll find a collection of anime I’ve explored, sorted by genre and ty
         <a href="#username" className="btn btn-danger btn-lg rounded-0">Get Started</a>
       </section>
 
-      <div className="d-flex align-items-center justify-content-center min-vh-100 bg-dark text-white">
-        <main className="form-signin w-100 text-center">
-
-
-          <h1 className="mb-3" id="username">
-            <AuroraText>Hello {name} <i className="bi bi-lightbulb"></i></AuroraText>
-          </h1>
-
-          <div className="form-floating mb-3 text-danger">
-            <input
-              type="text"
-              className="form-control"
-              id="floatingInput"
-              placeholder="Username"
-              autoComplete="off"
-              onChange={handleChange}
-              value={name}
-            />
-            <label htmlFor="floatingInput">Username</label>
-          </div>
-
-          <button className="btn btn-outline-danger w-100 py-2" type="button">
-            Youkoso
-          </button>
-
-          {/* <img src="/images/back1.jpg" className="img-fluid my-3" alt="Background" /> */}
-
-        </main>
-      </div>
-      <div className="container py-5 bg-dark text-white">
+      <div className="container py-5 bg-dark text-white" id="username">
         <h1 className="display-5 fw-bold mb-4 title">Ryou's AnimeList</h1>
 
         {/* Filters */}
