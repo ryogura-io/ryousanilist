@@ -161,7 +161,7 @@ Here you’ll find a collection of anime I’ve explored, sorted by genre and ty
                   <img
                     src={anime.coverImage.large}
                     alt={anime.title.romaji}
-                    className="img-fluid rounded-0"
+                    className="img-fluid rounded-start"
                     style={{
                       width: "100px",
                       height: "100%",
@@ -203,3 +203,4 @@ Here you’ll find a collection of anime I’ve explored, sorted by genre and ty
     </>
   );
 }
+
