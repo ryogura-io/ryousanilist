@@ -171,7 +171,7 @@ function toggleFilter(filter) {
                   <img
                     src={anime.coverImage.large}
                     alt={anime.title.romaji}
-                    className="img-fluid rounded-0"
+                    className="img-fluid rounded-start"
                     style={{
                       width: "100px",
                       height: "100%",
@@ -211,4 +211,5 @@ function toggleFilter(filter) {
     </>
   );
 }
+
 
