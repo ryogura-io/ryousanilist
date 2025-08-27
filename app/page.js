@@ -10,87 +10,98 @@ import { cn } from "@/lib/utils";
 
 export default function Home() {
   const [animeList, setAnimeList] = useState([]);
-  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [selectedFilters, setSelectedFilters] = useState([]); // ✅ merged genres + tags
   const [type, setType] = useState("All");
-  const [name, setName] = useState("");
 
-  function handleChange(event) {
-    setName(event.target.value);
-  }
   useEffect(() => {
-    async function fetchData() {
-      const query = `
-        query ($username: String) {
-          MediaListCollection(userName: $username, type: ANIME) {
-            lists {
-              entries {
-                media {
-                  id
-                  title { romaji english }
-                  coverImage { large }
-                  genres
-                  averageScore
-                  episodes
-                  status
-                  format
-                  siteUrl
-                }
+  async function fetchData() {
+    const query = `
+      query ($username: String) {
+        MediaListCollection(userName: $username, type: ANIME) {
+          lists {
+            entries {
+              media {
+                id
+                title { romaji english }
+                coverImage { large }
+                genres
+                tags { name }
+                averageScore
+                episodes
+                status
+                format
+                siteUrl
               }
             }
           }
         }
-      `;
+      }
+    `;
 
-      const variables = { username: "RyouGura" }; // <-- your AniList username
+    const variables = { username: "RyouGura" };
 
-      const res = await fetch("https://graphql.anilist.co", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, variables }),
-      });
+    const res = await fetch("https://graphql.anilist.co", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables }),
+    });
 
-      const data = await res.json();
-      const entries = data.data.MediaListCollection.lists.flatMap(
-        (l) => l.entries
-      );
-      setAnimeList(entries.map((e) => e.media));
-    }
-
-    fetchData();
-  }, []);
-
-  // Filtering (AND mode for genres)
-  const filtered = animeList.filter((anime) => {
-    const matchesGenres =
-      selectedGenres.length === 0 ||
-      selectedGenres.every((g) => anime.genres.includes(g));
-    const matchesType = type === "All" || anime.format === type;
-    return matchesGenres && matchesType;
-  });
-
-  // Collect unique genres + types
-  const allGenres = [...new Set(animeList.flatMap((a) => a.genres))];
-  const allTypes = ["All", ...new Set(animeList.map((a) => a.format))];
-
-  // Toggle genre
-  function toggleGenre(genre) {
-    setSelectedGenres((prev) =>
-      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
+    const data = await res.json();
+    const entries = data.data.MediaListCollection.lists.flatMap(
+      (l) => l.entries
     );
+    setAnimeList(entries.map((e) => e.media));
   }
+
+  fetchData();
+}, []);
+
+// ✅ Filtering (check both genres and tags)
+const filtered = animeList.filter((anime) => {
+  const matchesFilters =
+    selectedFilters.length === 0 ||
+    selectedFilters.every(
+      (f) =>
+        anime.genres.includes(f) ||
+        anime.tags.some((t) => t.name.toLowerCase() === f.toLowerCase())
+    );
+
+  const matchesType = type === "All" || anime.format === type;
+  return matchesFilters && matchesType;
+});
+
+// ✅ Collect unique genres + tags
+const allGenres = [...new Set(animeList.flatMap((a) => a.genres))];
+const allTags = [...new Set(animeList.flatMap((a) => a.tags.map((t) => t.name)))];
+
+// ✅ Add only "isekai" tag manually
+const allFilters = [...new Set([...allGenres, "isekai"])];
+// if you want to allow ALL tags, replace the above with:
+// const allFilters = [...new Set([...allGenres, ...allTags, "isekai"])];
+
+// ✅ Toggle genre/tag
+function toggleFilter(filter) {
+  setSelectedFilters((prev) =>
+    prev.includes(filter)
+      ? prev.filter((f) => f !== filter)
+      : [...prev, filter]
+  );
+}
+
 
   return (
     <>
+      {/* Intro Section */}
       <section className="min-vh-100 d-flex flex-column justify-content-center align-items-center text-center bg-dark text-white">
-        <DotPattern glow={true} className={cn("[mask-image:radial-gradient(2000px_circle_at_center,transparent,white)]")}
-        />
+        <DotPattern glow={true} className={cn("[mask-image:radial-gradient(2000px_circle_at_center,transparent,white)]")} />
         <h1 className="display-1 fw-bold mb-3"><AuroraText>Gura-io</AuroraText></h1>
-        <p className="lead mb-4"><strong>Welcome to My Anime List!</strong><br/>
-Here you’ll find a collection of anime I’ve explored, sorted by genre and type. Use the filters to discover shows that match your vibe — whether it’s action-packed adventures, heartfelt dramas, or lighthearted comedies.</p>
-        <a href="#username" className="btn btn-danger btn-lg rounded-0">Get Started</a>
+        <p className="lead mb-4 container"><b>Welcome to My Anime List!</b><br />
+          Here you'll find a collection of anime I've explored, sorted by genre, tag and type. Use the filters to discover shows that match your vibe — whether it’s action-packed adventures, heartfelt dramas, or even a classic isekai journey.</p>
+        <a href="#list" className="btn btn-danger btn-lg rounded-0">Get Started</a>
       </section>
 
-      <div className="container py-5 bg-dark text-white" id="username">
+      {/* Anime Section */}
+      <div className="container py-5 bg-dark text-white" id="list">
         <h1 className="display-5 fw-bold mb-4 title">Ryou's AnimeList</h1>
 
         {/* Filters */}
@@ -102,31 +113,32 @@ Here you’ll find a collection of anime I’ve explored, sorted by genre and ty
               onChange={(e) => setType(e.target.value)}
               className="form-select"
             >
-              {allTypes.map((t) => (
+              {["All", ...new Set(animeList.map((a) => a.format))].map((t) => (
                 <option key={t}>{t}</option>
               ))}
             </select>
           </div>
 
           <div className="col-md-9">
-            <label className="form-label fw-semibold">Genres Filter</label>
+            <label className="form-label fw-semibold">Genres & Tags</label>
             <div className="d-flex flex-wrap gap-2">
-              {allGenres.map((g) => {
-                const isActive = selectedGenres.includes(g);
+              {allFilters.map((f) => {
+                const isActive = selectedFilters.includes(f);
                 return (
                   <button
-                    key={g}
-                    onClick={() => toggleGenre(g)}
-                    className={`btn btn-sm ${isActive ? "btn-primary" : "btn-outline-secondary"
-                      }`}
+                    key={f}
+                    onClick={() => toggleFilter(f)}
+                    className={`btn btn-sm ${
+                      isActive ? "btn-primary" : "btn-outline-secondary"
+                    }`}
                   >
-                    {g}
+                    {f}
                   </button>
                 );
               })}
-              {selectedGenres.length > 0 && (
+              {selectedFilters.length > 0 && (
                 <button
-                  onClick={() => setSelectedGenres([])}
+                  onClick={() => setSelectedFilters([])}
                   className="btn btn-sm btn-danger"
                 >
                   Clear
@@ -136,15 +148,13 @@ Here you’ll find a collection of anime I’ve explored, sorted by genre and ty
           </div>
         </div>
 
+        {/* Counter */}
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h4 className="text-light font-heading">
-            Anime List
-          </h4>
+          <h4 className="text-light font-heading">Anime List</h4>
           <span className="badge bg-primary">
             Showing {filtered.length} anime
           </span>
         </div>
-
 
         {/* Anime Grid */}
         <div className="row g-3">
@@ -156,12 +166,12 @@ Here you’ll find a collection of anime I’ve explored, sorted by genre and ty
                 rel="noreferrer"
                 className="text-decoration-none text-dark"
               >
-                <div className="d-flex border rounded shadow-sm h-100 anime-list">
-                  {/* Left: Thumbnail */}
+                <div className="d-flex border rounded shadow-sm h-100 anime-list bg-secondary">
+                  {/* Thumbnail */}
                   <img
                     src={anime.coverImage.large}
                     alt={anime.title.romaji}
-                    className="img-fluid rounded-start"
+                    className="img-fluid rounded-0"
                     style={{
                       width: "100px",
                       height: "100%",
@@ -171,8 +181,8 @@ Here you’ll find a collection of anime I’ve explored, sorted by genre and ty
                     }}
                   />
 
-                  {/* Right: Text Info */}
-                  <div className="flex-grow-1 p-2">
+                  {/* Info */}
+                  <div className="flex-grow-1 p-2 text-white">
                     <h6 className="mb-1 font-heading">
                       {anime.title.english || anime.title.romaji}
                     </h6>
@@ -192,8 +202,6 @@ Here you’ll find a collection of anime I’ve explored, sorted by genre and ty
             </div>
           ))}
         </div>
-
-
 
         {/* No results */}
         {filtered.length === 0 && (
